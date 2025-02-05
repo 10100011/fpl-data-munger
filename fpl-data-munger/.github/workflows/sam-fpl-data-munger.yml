@@ -1,0 +1,34 @@
+name: Deploy Lambda Function
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to AWS Lambda
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionsDeployRole
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy CloudFormation Stack
+        run: |
+          aws cloudformation deploy \
+            --stack-name FantasyDraftLambdaStack \
+            --template-file cloudformation.yaml \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --region ${{ secrets.AWS_REGION }}

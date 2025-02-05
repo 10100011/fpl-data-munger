@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to deploy an AWS Lambda function for processing fantasy_draft.json and storing CSV outputs in S3.
+
+Resources:
+  FantasyDraftBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "fantasy-pl-${AWS::Region}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  FantasyDraftBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FantasyDraftBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: "*"
+            Action:
+              - s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${FantasyDraftBucket}/*"
+
+  FantasyDraftLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: FantasyDraftLambdaRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: FantasyDraftS3Policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${FantasyDraftBucket}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "arn:aws:logs:*:*:*"
+
+  FantasyDraftLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: FantasyDraftProcessor
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt FantasyDraftLambdaRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      Code:
+        S3Bucket: !Sub "fantasy-draft-${AWS::AccountId}-${AWS::Region}"
+        S3Key: "lambda_function.zip"
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref FantasyDraftBucket
+
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FantasyDraftLambda
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt FantasyDraftBucket.Arn
+
+  S3EventTrigger:
+    Type: AWS::S3::BucketNotification
+    Properties:
+      Bucket: !Ref FantasyDraftBucket
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt FantasyDraftLambda.Arn
