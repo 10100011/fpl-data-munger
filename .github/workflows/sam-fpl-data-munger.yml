@@ -38,7 +38,7 @@ jobs:
 
       - id: deploy-data-munger
         name: SAM deploy
-        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name FPLDataMunger --s3-bucket github-package-builds-${{ env.region }} --capabilities CAPABILITY_IAM --region ${{ env.region }}
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name FPLDataMunger --s3-bucket github-package-builds-${{ vars.AWS_REGION }} --capabilities CAPABILITY_IAM --region ${{ vars.AWS_REGION }}
 
       - name: Describe stacks
         run: |
