@@ -32,11 +32,15 @@ jobs:
 
       - uses: aws-actions/setup-sam@v2
 
-      - name: Deploy CloudFormation Stack
+      - id: build-data-munger
+        name: SAM build
+        run: sam build --template fpl-data-munger/fpl-data-munger.yaml --use-container
+
+      - id: deploy-data-munger
+        name: SAM deploy
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name FPLDataMunger --s3-bucket github-package-builds-${{ env.region }} --capabilities CAPABILITY_IAM --region ${{ env.region }}
+
+      - name: Describe stacks
         run: |
-          aws cloudformation deploy \
-            --stack-name FPLDataMunger \
-            --template-file fpl-data-munger/fpl-data-munger.yaml \
-            --capabilities CAPABILITY_NAMED_IAM \
-            --region ${{ vars.AWS_REGION }}
-            --profile default
+          aws cloudformation describe-stacks --stack-name FPLDataMunger --output text
+
