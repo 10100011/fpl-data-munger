@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template to deploy an AWS Lambda function for processing fantasy_draft.json and storing CSV outputs in S3.
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation template to deploy an AWS Lambda function for processing FPL data and storing CSV outputs in S3.
 
 Resources:
   FantasyDraftBucket:
