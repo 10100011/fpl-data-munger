@@ -62,9 +62,10 @@ Resources:
       Role: !GetAtt FantasyDraftLambdaRole.Arn
       Timeout: 60
       MemorySize: 512
-      Code:
-        S3Bucket: !Sub "fantasy-draft-${AWS::AccountId}-${AWS::Region}"
-        S3Key: "lambda_function.zip"
+      CodeUri: fpl-data-munger/
+      #Code:
+        #S3Bucket: !Sub "github-package-builds--${AWS::Region}"
+        #S3Key: "lambda_function.zip"
       Environment:
         Variables:
           S3_BUCKET: !Ref FantasyDraftBucket
