@@ -11,10 +11,6 @@ Resources:
         BlockPublicPolicy: false
         IgnorePublicAcls: false
         RestrictPublicBuckets: false
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: s3:ObjectCreated:*
-            Function: !GetAtt FantasyDraftLambda.Arn
 
   FantasyDraftBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -82,10 +78,44 @@ Resources:
       SourceArn: !GetAtt FantasyDraftBucket.Arn
 
   S3EventTrigger:
-    Type: AWS::S3::BucketNotification
+    Type: Custom::S3EventTrigger
     Properties:
-      Bucket: !Ref FantasyDraftBucket
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: s3:ObjectCreated:*
-            Function: !GetAtt FantasyDraftLambda.Arn
+      ServiceToken: !GetAtt S3EventLambda.Arn
+      BucketName: !Ref FantasyDraftBucket
+      LambdaArn: !GetAtt FantasyDraftLambda.Arn
+
+  S3EventLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: S3EventSetup
+      Runtime: python3.13
+      Handler: index.handler
+      Role: !GetAtt FantasyDraftLambdaRole.Arn
+      Timeout: 30
+      MemorySize: 128
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+
+          s3 = boto3.client('s3')
+
+          def handler(event, context):
+              try:
+                  if event['RequestType'] in ['Create', 'Update']:
+                      bucket = event['ResourceProperties']['BucketName']
+                      lambda_arn = event['ResourceProperties']['LambdaArn']
+                      s3.put_bucket_notification_configuration(
+                          Bucket=bucket,
+                          NotificationConfiguration={
+                              'LambdaFunctionConfigurations': [
+                                  {
+                                      'LambdaFunctionArn': lambda_arn,
+                                      'Events': ['s3:ObjectCreated:*']
+                                  }
+                              ]
+                          }
+                      )
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              except Exception as e:
+                  cfnresponse.send(event, context, cfnresponse.FAILED, {'Error': str(e)})
