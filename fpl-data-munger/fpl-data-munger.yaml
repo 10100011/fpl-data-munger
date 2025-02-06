@@ -11,6 +11,10 @@ Resources:
         BlockPublicPolicy: false
         IgnorePublicAcls: false
         RestrictPublicBuckets: false
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt FantasyDraftLambda.Arn
 
   FantasyDraftBucketPolicy:
     Type: AWS::S3::BucketPolicy
