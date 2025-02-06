@@ -6,16 +6,26 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
 jobs:
   deploy:
     name: Deploy to AWS Lambda
     runs-on: ubuntu-latest
 
     steps:
-      - run: echo "region=eu-west-1" >> $GITHUB_ENV
-
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        id: creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: <arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/GitHubAction-AssumeRoleWithAction>
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
 
       - uses: actions/setup-python@v5
         with:
@@ -23,18 +33,11 @@ jobs:
 
       - uses: aws-actions/setup-sam@v2
 
-      - name: Configure AWS credentials
-        id: creds
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.region }}
-
       - name: Deploy CloudFormation Stack
         run: |
           aws cloudformation deploy \
             --stack-name FantasyDraftLambdaStack \
             --template-file fpl-data-munger.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
-            --region ${{ env.region }}
+            --region ${{ vars.AWS_REGION }}
+
