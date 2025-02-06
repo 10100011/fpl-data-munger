@@ -36,7 +36,7 @@ jobs:
         run: |
           aws cloudformation deploy \
             --stack-name FantasyDraftLambdaStack \
-            --template-file fpl-data-munger.yaml \
+            --template-file fpl-data-munger/fpl-data-munger.yaml \
             --capabilities CAPABILITY_NAMED_IAM \
             --region ${{ vars.AWS_REGION }}
 
