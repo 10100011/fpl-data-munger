@@ -54,17 +54,16 @@ Resources:
                 Resource: "arn:aws:logs:*:*:*"
 
   FantasyDraftLambda:
-    Type: AWS::Lambda::Function
+    Type: AWS::Serverless::Function
     Properties:
-      FunctionName: FantasyDraftProcessor
-      Runtime: python3.13
-      Handler: lambda_function.lambda_handler
-      Role: !GetAtt FantasyDraftLambdaRole.Arn
-      Timeout: 60
-      MemorySize: 512
-      Code:
-        S3Bucket: !Sub "fantasy-draft-${AWS::AccountId}-${AWS::Region}"
-        S3Key: "lambda_function.zip"
+      CodeUri: fpl-data-munger/
+      Description: Lambda function to process fantasy_draft.json and store CSV outputs in S3.
       Environment:
         Variables:
           S3_BUCKET: !Ref FantasyDraftBucket
+      FunctionName: FantasyDraftProcessor
+      Handler: lambda_function.lambda_handler
+      MemorySize: 256
+      Runtime: python3.13
+      Role: !GetAtt FantasyDraftLambdaRole.Arn
+      Timeout: 60
