@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: CloudFormation template to deploy an AWS Lambda function for processing FPL data and storing CSV outputs in S3.
+Description: CloudFormation template to deploy an AWS Lambda function process FPL data and store CSV outputs in S3.
 
 Resources:
   FantasyDraftBucket:
@@ -55,16 +54,17 @@ Resources:
                 Resource: "arn:aws:logs:*:*:*"
 
   FantasyDraftLambda:
-    Type: AWS::Serverless::Function
+    Type: AWS::Lambda::Function
     Properties:
-      CodeUri: fpl-data-munger/
-      Description: Lambda function to process fantasy_draft.json and store CSV outputs in S3.
+      FunctionName: FantasyDraftProcessor
+      Runtime: python3.13
+      Handler: lambda_function.lambda_handler
+      Role: !GetAtt FantasyDraftLambdaRole.Arn
+      Timeout: 60
+      MemorySize: 512
+      Code:
+        S3Bucket: !Sub "fantasy-draft-${AWS::AccountId}-${AWS::Region}"
+        S3Key: "lambda_function.zip"
       Environment:
         Variables:
           S3_BUCKET: !Ref FantasyDraftBucket
-      FunctionName: FantasyDraftProcessor
-      Handler: lambda_function.lambda_handler
-      MemorySize: 256
-      Runtime: python3.13
-      Role: !GetAtt FantasyDraftLambdaRole.Arn
-      Timeout: 60
