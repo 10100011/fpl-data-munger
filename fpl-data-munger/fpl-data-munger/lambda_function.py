@@ -4,7 +4,7 @@ import json
 import os
 import requests
 
-# Define S3 bucket details (modify if writing locally)
+# Define S3 bucket details
 S3_BUCKET = os.environ.get('S3_BUCKET')
 OUTPUT_FILE_POINTS = "fantasy_draft_points.csv"
 OUTPUT_FILE_WINS = "fantasy_draft_wins.csv"
@@ -62,6 +62,22 @@ def apply_cumulative_sum(event_results, league_entries):
             event_results[event][name] = cumulative_scores[name]
     return event_results
 
+def write_csv(output_file, event_results, league_entries):
+    """Write event results to a CSV file and upload to S3."""
+    sorted_events = sorted(event_results.keys())
+    short_names = sorted(league_entries.values())
+    file_path = os.path.join(TMP, output_file)
+    
+    with open(file_path, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Event"] + short_names)
+        for event in sorted_events:
+            row = [event] + [event_results[event].get(name, 0) for name in short_names]
+            writer.writerow(row)
+    
+    s3 = boto3.client("s3")
+    s3.upload_file(file_path, S3_BUCKET, output_file)
+
 def lambda_handler(event, context):
     """AWS Lambda entry point."""
     url = event["url"]  # Expecting the URL to be passed in the event object
@@ -69,4 +85,8 @@ def lambda_handler(event, context):
     event_results_points, event_results_wins, league_entries = transform_data(json_data)
     event_results_points = apply_cumulative_sum(event_results_points, league_entries)
     event_results_wins = apply_cumulative_sum(event_results_wins, league_entries)
-    return {"statusCode": 200, "body": "Processing complete"}
+    
+    write_csv(OUTPUT_FILE_POINTS, event_results_points, league_entries)
+    write_csv(OUTPUT_FILE_WINS, event_results_wins, league_entries)
+    
+    return {"statusCode": 200, "body": "Processing complete. CSV files saved to S3."}
