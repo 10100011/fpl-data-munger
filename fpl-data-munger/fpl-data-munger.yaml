@@ -72,3 +72,21 @@ Resources:
           S3_BUCKET: !Ref FPLDataMungerBucket
       Layers:
         - !Sub arn:aws:lambda:${AWS::Region}:770693421928:layer:Klayers-p312-requests:12
+
+  FPLDataMungerLambdaTrigger:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: "cron(21 3 * * ? *)"
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt FPLDataMungerLambda.Arn
+          Id: "FPLDataMungerLambdaTrigger"
+          Input: '{ "url": "https://example.com" }'
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref FPLDataMungerLambda
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt FPLDataMungerLambdaTrigger.Arn
