@@ -76,7 +76,7 @@ def write_csv(output_file, event_results, league_entries):
             writer.writerow(row)
     
     s3 = boto3.client("s3")
-    s3.upload_file(file_path, S3_BUCKET, output_file)
+    s3.upload_file(file_path, S3_BUCKET, output_file, ExtraArgs={'ContentType': 'text/plain'})
 
 def lambda_handler(event, context):
     """AWS Lambda entry point."""
