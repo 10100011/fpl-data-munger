@@ -12,7 +12,7 @@ TMP = "/tmp/"
 
 def load_json(id):
     """Load JSON data from a remote HTTPS source."""
-    url = "https://draft.premierleague.com/api/league/{id}/details"
+    url = f"https://draft.premierleague.com/api/league/{id}/details"
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
@@ -77,7 +77,7 @@ def write_csv(output_file, event_results, league_entries, id):
             writer.writerow(row)
     
     s3 = boto3.client("s3")
-    s3.upload_file(file_path, S3_BUCKET, 'draft/' . id . '/' . output_file, ExtraArgs={'ContentType': 'text/plain'})
+    s3.upload_file(file_path, S3_BUCKET, 'draft/' + id + '/' + output_file, ExtraArgs={'ContentType': 'text/plain'})
 
 def draft_handler(config):
     json_data = load_json(config["id"])

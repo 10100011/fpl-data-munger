@@ -9,7 +9,7 @@ OUTPUT_FILE_WINS = "fantasy_wins.csv"
 
 def fetch_league_data(id):
     """Fetch paginated league data from Fantasy Premier League API."""
-    base_url = "https://fantasy.premierleague.com/api/leagues-h2h-matches/league/{id}/"
+    base_url = f"https://fantasy.premierleague.com/api/leagues-h2h-matches/league/{id}/"
     page = 1
     all_matches = []
     while True:
@@ -84,7 +84,7 @@ def write_csv(output_file, event_results, player_names, s3_bucket, id):
             writer.writerow(row)
     
     s3 = boto3.client("s3")
-    s3.upload_file(file_path, s3_bucket, 'fantasy/' . id . '/' . output_file, ExtraArgs={'ContentType': 'text/plain'})
+    s3.upload_file(file_path, s3_bucket, 'fantasy/' + id + '/' + output_file, ExtraArgs={'ContentType': 'text/plain'})
 
 def fantasy_handler(config):
     """AWS Lambda entry point."""
