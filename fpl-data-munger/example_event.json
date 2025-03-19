@@ -1,0 +1,14 @@
+{
+    "draft": {
+        "h2h": {
+            "id": "123",
+            "include_total_points": true
+        }
+    },
+    "fantasy": {
+        "h2h": {
+            "id": "123",
+            "include_total_points": true
+        }
+    }
+}
