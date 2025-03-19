@@ -40,8 +40,8 @@ def transform_data(matches):
         event = match["event"]
         entry_1_id, entry_1_points, entry_1_total = match["entry_1_entry"], match["entry_1_points"], match["entry_1_total"]
         entry_2_id, entry_2_points, entry_2_total = match["entry_2_entry"], match["entry_2_points"], match["entry_2_total"]
-        entry_1_initials = extract_initials(match["entry_1_player_name"])
-        entry_2_initials = extract_initials(match["entry_2_player_name"])
+        entry_1_initials = f"{extract_initials(match["entry_1_player_name"])}_{entry_1_id}"
+        entry_2_initials = f"{extract_initials(match["entry_2_player_name"])}_{entry_2_id}"
 
         player_names[entry_1_id] = entry_1_initials
         player_names[entry_2_id] = entry_2_initials
